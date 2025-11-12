@@ -25,6 +25,10 @@ public sealed partial class GameApi
  private IHookBus hookBus = new HookBus();
  private IEntitySpawner spawner = new EntitySpawner();
  private ISideGate sideGate = new SideGate(true); // default server-mode for singleplayer
+ private string? currentModId;
+
+ public void SetCurrentMod(string modId) => currentModId = modId;
+ public string? GetCurrentMod() => currentModId;
 
  /// <summary>Allows host to override the side gate (server/client).</summary>
  public void SetSideGate(ISideGate gate) => sideGate = gate ?? throw new ArgumentNullException(nameof(gate));

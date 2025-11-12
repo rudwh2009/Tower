@@ -8,6 +8,7 @@ public sealed class AssetService : IAssetService
 {
  private static readonly HashSet<string> AllowedExt = new(StringComparer.OrdinalIgnoreCase)
  { ".png", ".json", ".ogg", ".wav", ".ttf", ".mgfxo", ".particles.json", ".ember", ".mp3" };
+ private const long MaxFileSizeBytes =64L *1024 *1024; //64MB cap
 
  private readonly Dictionary<string, Func<object?>> _loaders = new(StringComparer.Ordinal);
  private readonly Dictionary<string, object?> _cache = new(StringComparer.Ordinal);
@@ -36,6 +37,8 @@ public sealed class AssetService : IAssetService
  var full = Path.GetFullPath(Path.Combine(rootDir, rel));
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
+ if (!File.Exists(full)) { Log.Warning("Asset path not found: {Path}", full); continue; }
+ if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Asset too large: {Path}", full); continue; }
  _loaders[$"{modId}/{id}"] = () => LoadAsset(full);
  }
  }
@@ -51,6 +54,8 @@ public sealed class AssetService : IAssetService
  var full = Path.GetFullPath(Path.Combine(rootDir, rel));
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext) && !full.EndsWith(".particles.json", StringComparison.OrdinalIgnoreCase)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
+ if (!File.Exists(full)) { Log.Warning("Particle path not found: {Path}", full); continue; }
+ if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Particle too large: {Path}", full); continue; }
  var logicalId = $"{modId}/{id}";
  if (full.EndsWith(".ember", StringComparison.OrdinalIgnoreCase))
  {
@@ -74,8 +79,10 @@ public sealed class AssetService : IAssetService
  var full = Path.GetFullPath(Path.Combine(rootDir, rel));
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
+ if (!File.Exists(full)) { Log.Warning("Sound path not found: {Path}", full); continue; }
+ if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Sound too large: {Path}", full); continue; }
  var logicalId = $"{modId}/{id}";
- _soundLoaders[logicalId] = () => LoadSound(full);
+ _soundLoaders[logicalId] = () => new SoundHandle(full);
  }
  }
  }
@@ -139,6 +146,10 @@ public sealed class AssetService : IAssetService
  {
  try
  {
+ var ext = Path.GetExtension(full);
+ if (string.Equals(ext, ".png", StringComparison.OrdinalIgnoreCase)) return new TextureHandle(full);
+ if (string.Equals(ext, ".json", StringComparison.OrdinalIgnoreCase)) return File.ReadAllText(full);
+ if (string.Equals(ext, ".ttf", StringComparison.OrdinalIgnoreCase)) return new FontSpec(full);
  return new { Path = full };
  }
  catch (Exception ex)
@@ -160,10 +171,5 @@ public sealed class AssetService : IAssetService
  Log.Error(ex, "Failed to load particle json {Path}", full);
  return null;
  }
- }
-
- private static object LoadSound(string full)
- {
- return new { Path = full };
  }
 }

@@ -1,4 +1,6 @@
 using MoonSharp.Interpreter;
+using MoonSharp.Interpreter.Loaders;
+using MoonSharp.Interpreter.Debugging;
 using Serilog;
 
 namespace Tower.Core.Scripting;
@@ -8,12 +10,16 @@ public sealed class LuaRuntime
  private readonly Script _script;
  public Script Script => _script;
  private readonly object _api;
+ private readonly ModScriptLoader _loader = new();
+ private readonly BudgetDebugger _budget = new();
+ private int _instructionBudget =200000; // default per call
 
  public LuaRuntime(object gameApi)
  {
  _api = gameApi;
  _script = new Script(CoreModules.Basic | CoreModules.Table | CoreModules.String | CoreModules.ErrorHandling | CoreModules.Math);
- // Remove unsafe globals
+ _script.Options.ScriptLoader = _loader;
+ _script.AttachDebugger(_budget);
  var g = _script.Globals;
  g["io"] = DynValue.Nil;
  g["os"] = DynValue.Nil;
@@ -22,6 +28,10 @@ public sealed class LuaRuntime
  g["GLOBAL"] = DynValue.NewTable(_script);
  LoadCompat();
  }
+
+ public void SetScriptRoot(string root) => _loader.SetRoot(root);
+ public void SetInstructionBudget(int instructions) => _instructionBudget = instructions;
+ private void ResetBudget() => _budget.Reset(_instructionBudget);
 
  private void LoadCompat()
  {
@@ -43,13 +53,13 @@ public sealed class LuaRuntime
 
  public DynValue DoString(string code, string? chunkName = null)
  {
- try { return _script.DoString(code, null, chunkName); }
+ try { ResetBudget(); return _script.DoString(code, null, chunkName); }
  catch (ScriptRuntimeException sre) { Serilog.Log.Error("Lua runtime error: {Message}", sre.DecoratedMessage); throw; }
  }
 
  public DynValue DoFile(string path)
  {
- try { return _script.DoFile(path); }
+ try { ResetBudget(); return _script.DoFile(path); }
  catch (ScriptRuntimeException sre) { Serilog.Log.Error("Lua runtime error: {Message}", sre.DecoratedMessage); throw; }
  }
 }

@@ -90,11 +90,24 @@ public sealed class EntitySpawner : IEntitySpawner
  public int Id { get; } = Interlocked.Increment(ref _nextId);
  public double X { get; set; }
  public double Y { get; set; }
+ public double VX { get; set; }
+ public double VY { get; set; }
  private readonly HashSet<string> _tags = new(StringComparer.Ordinal);
  private readonly Dictionary<string,double> _stats = new(StringComparer.Ordinal);
+ private readonly Dictionary<string,string> _sStats = new(StringComparer.Ordinal);
+ private readonly Dictionary<string,bool> _bStats = new(StringComparer.Ordinal);
+ private bool _destroyed;
  public void AddTag(string tag) { if (!string.IsNullOrWhiteSpace(tag)) _tags.Add(tag); }
+ public void RemoveTag(string tag) { if (!string.IsNullOrWhiteSpace(tag)) _tags.Remove(tag); }
+ public bool HasTag(string tag) => _tags.Contains(tag);
  public void SetStat(string name, double value) { if (!string.IsNullOrWhiteSpace(name)) _stats[name]=value; }
  public double GetStat(string name) => _stats.TryGetValue(name, out var v) ? v :0;
+ public void SetString(string name, string value) { if (!string.IsNullOrWhiteSpace(name)) _sStats[name]=value; }
+ public string? GetString(string name) => _sStats.TryGetValue(name, out var v) ? v : null;
+ public void SetBool(string name, bool value) { if (!string.IsNullOrWhiteSpace(name)) _bStats[name]=value; }
+ public bool GetBool(string name) => _bStats.TryGetValue(name, out var v) ? v : false;
+ public double DistanceTo(double x, double y) { var dx = X-x; var dy = Y-y; return Math.Sqrt(dx*dx+dy*dy); }
+ public void Destroy() { _destroyed = true; }
  }
  public IEntityProxy Spawn(string id, SpawnContext ctx, Closure factory)
  {

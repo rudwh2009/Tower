@@ -40,10 +40,12 @@ public sealed class ModBootstrapper
  try
  {
  Log.Information("Loading mod {Id}", meta.Id);
- _assets.RegisterFromManifest(meta.Id, root, "assets.json");
+ _api.RegisterAssets(meta.Id, root, "assets.json");
  _lua.SetModContext(meta.Id);
+ _api.SetCurrentMod(meta.Id);
+ _lua.SetScriptRoot(root);
  var entry = Path.Combine(root, meta.Entry);
- if (File.Exists(entry)) _lua.DoFile(entry);
+ if (File.Exists(entry)) _lua.DoFile(meta.Entry);
  else Log.Warning("Entry not found: {Entry}", entry);
  }
  catch (Exception ex)
@@ -73,7 +75,6 @@ public sealed class ModBootstrapper
  visited.Add(id);
  }
  foreach (var m in mods) Visit(m.meta.Id);
- // override order respected by iteration order
  return result;
  }
 }

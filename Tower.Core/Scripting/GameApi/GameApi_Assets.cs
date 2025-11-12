@@ -1,62 +1,59 @@
 // Licensed under the MIT License.
 
+using MoonSharp.Interpreter;
 using Serilog;
+using Tower.Core.Engine.Assets;
+using Tower.Core.Engine.Assets.Particles;
 
 namespace Tower.Core.Scripting.GameApi;
 
 /// <summary>
-/// Asset registration and lookup wrappers.
+/// Asset registration and lookup wrappers (manifest-backed, handle-based).
 /// </summary>
 public sealed partial class GameApi
 {
- /// <summary>Registers a texture path for the given id.</summary>
- /// <param name="id">Logical texture id (without prefix).</param>
- /// <param name="path">Relative asset path.</param>
- public void RegisterTexture(string id, string path) => this.Register("texture/" + id, path);
-
- /// <summary>Registers a sound path for the given id.</summary>
- /// <param name="id">Logical sound id.</param>
- /// <param name="path">Relative asset path.</param>
- public void RegisterSound(string id, string path) => this.Register("sound/" + id, path);
-
- /// <summary>Registers an animation metadata path for the given id.</summary>
- /// <param name="id">Logical anim id.</param>
- /// <param name="path">Relative asset path.</param>
- public void RegisterAnim(string id, string path) => this.Register("anim/" + id, path);
-
- /// <summary>Registers a font path for the given id.</summary>
- /// <param name="id">Logical font id.</param>
- /// <param name="path">Relative asset path.</param>
- public void RegisterFont(string id, string path) => this.Register("font/" + id, path);
-
- /// <summary>Registers a shader path for the given id.</summary>
- /// <param name="id">Logical shader id.</param>
- /// <param name="path">Relative asset path.</param>
- public void RegisterShader(string id, string path) => this.Register("shader/" + id, path);
-
- /// <summary>Gets a texture by logical id.</summary>
- /// <param name="logicalId">Full logical id.</param>
- /// <returns>Texture descriptor object or null.</returns>
- public object? GetTexture(string logicalId) => this.Get("texture/" + logicalId);
-
- /// <summary>Gets a sound by logical id.</summary>
- /// <param name="logicalId">Full logical id.</param>
- /// <returns>Sound descriptor object or null.</returns>
- public object? GetSound(string logicalId) => this.Get("sound/" + logicalId);
-
- /// <summary>Gets an animation definition by logical id.</summary>
- /// <param name="logicalId">Full logical id.</param>
- /// <returns>Animation definition or null.</returns>
- public object? GetAnim(string logicalId) => this.Get("anim/" + logicalId);
-
- private void Register(string id, string path)
+ /// <summary>Registers assets from a manifest for a given mod id and root.</summary>
+ public void RegisterAssets(string modId, string root, string manifestPath)
  {
- Log.Information("Register asset {Id} => {Path}", id, path);
+ if (string.IsNullOrWhiteSpace(modId)) throw new ScriptRuntimeException("modId required");
+ if (string.IsNullOrWhiteSpace(root)) throw new ScriptRuntimeException("root required");
+ if (string.IsNullOrWhiteSpace(manifestPath)) throw new ScriptRuntimeException("manifestPath required");
+ this.assets.RegisterFromManifest(modId, root, manifestPath);
  }
 
- private object? Get(string logicalId)
+ public object GetTexture(string logicalId)
  {
- this.assets.TryGet(logicalId, out var asset);
- return asset;
+ if (!this.assets.TryGet(logicalId, out var obj) || obj is not TextureHandle th)
+ throw new ScriptRuntimeException($"texture not found: {logicalId}");
+ return th;
+ }
+
+ public object GetSound(string logicalId)
+ {
+ var s = this.assets.GetSound(logicalId);
+ return s;
+ }
+
+ public object GetAnim(string logicalId)
+ {
+ if (!this.assets.TryGet(logicalId, out var obj) || obj is not string json)
+ throw new ScriptRuntimeException($"anim not found: {logicalId}");
+ var def = Tower.Core.Engine.Assets.Anim.AnimLoaders.Parse(json);
+ if (def is null) throw new ScriptRuntimeException($"anim parse failed: {logicalId}");
+ return def;
+ }
+
+ public object GetParticle(string logicalId)
+ {
+ if (!this.assets.TryGetParticle(logicalId, out var obj) || obj is not ParticleEffectDef p)
+ throw new ScriptRuntimeException($"particle not found: {logicalId}");
+ return p;
+ }
+
+ public object GetFont(string logicalId)
+ {
+ if (!this.assets.TryGet(logicalId, out var obj) || obj is not FontSpec f)
+ throw new ScriptRuntimeException($"font not found: {logicalId}");
+ return f;
  }
 }

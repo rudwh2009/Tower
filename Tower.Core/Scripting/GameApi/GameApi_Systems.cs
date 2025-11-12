@@ -10,9 +10,10 @@ namespace Tower.Core.Scripting.GameApi;
 /// </summary>
 public sealed partial class GameApi
 {
-    /// <summary>Adds an update system callable from Lua with a specific order.</summary>
+    /// <summary>Adds an update system callable from Lua with a specific order. Server-only.</summary>
     public void AddSystem(string name, int order, LuaUpdate update)
     {
+        sideGate.EnsureServer("Systems.Add");
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         if (update is null)
         {

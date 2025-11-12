@@ -3,6 +3,7 @@
 
 using MoonSharp.Interpreter;
 using Tower.Core.Engine.UI;
+using Tower.Core.Engine.Input;
 
 namespace Tower.Core.Scripting.GameApi;
 
@@ -12,21 +13,42 @@ namespace Tower.Core.Scripting.GameApi;
 public sealed partial class GameApi
 {
  private IUiSink? uiSink;
+ private IInputSink? inputSink;
  public void SetUiSink(IUiSink sink) => uiSink = sink ?? throw new ArgumentNullException(nameof(sink));
+ public void SetInputSink(IInputSink sink) => inputSink = sink ?? throw new ArgumentNullException(nameof(sink));
 
- /// <summary>Registers an input action callback (server-only placeholder for future input binding).</summary>
- public void OnAction(string action, LuaAction fn)
+ // Nested UI + Input namespaces for client-only
+ public GameApiUi Ui => _ui ??= new GameApiUi(this);
+ private GameApiUi? _ui;
+ public GameApiInput Input => _input ??= new GameApiInput(this);
+ private GameApiInput? _input;
+
+ [MoonSharpUserData]
+ public sealed class GameApiUi
  {
- sideGate.EnsureServer("Input.OnAction");
- if (string.IsNullOrWhiteSpace(action)) throw new ScriptRuntimeException("action required");
- if (fn is null) throw new ScriptRuntimeException("callback required");
- // For now we only acknowledge; real input binding can be added later
+ private readonly GameApi _api;
+ internal GameApiUi(GameApi api) { _api = api; }
+ public void Clear() { _api.sideGate.EnsureClient("UI.Clear"); _api.uiSink?.Clear(); }
+ public void AddText(string id, string text, double x, double y, string? fontId = null) { _api.sideGate.EnsureClient("UI.AddText"); _api.uiSink?.AddText(id, text, (float)x, (float)y, fontId); }
+ public void SetText(string id, string text) { _api.sideGate.EnsureClient("UI.SetText"); _api.uiSink?.SetText(id, text); }
+ public void Remove(string id) { _api.sideGate.EnsureClient("UI.Remove"); _api.uiSink?.Remove(id); }
+ public void AddButton(string id, string text, double x, double y, Closure onClick) { _api.sideGate.EnsureClient("UI.AddButton"); _api.uiSink?.AddButton(id, text, (float)x, (float)y, () => onClick.Call()); }
+ public void AddSystem(string name, int order, LuaUpdate update) { _api.sideGate.EnsureClient("UI.AddSystem"); _api.systems.Add(name, order, dt => update(dt)); }
  }
 
- /// <summary>Creates HUD text. Client-only; on server throws.</summary>
+ [MoonSharpUserData]
+ public sealed class GameApiInput
+ {
+ private readonly GameApi _api;
+ internal GameApiInput(GameApi api) { _api = api; }
+ public void Bind(string action, string key) { _api.sideGate.EnsureClient("Input.Bind"); _api.inputSink?.Bind(action, key); }
+ public void Subscribe(string action, Closure fn) { _api.sideGate.EnsureClient("Input.Subscribe"); _api.inputSink?.Subscribe(action, () => fn.Call()); }
+ }
+
+ /// <summary>Legacy HUD text forwarder (client-only).</summary>
  public void CreateHudText(string text)
  {
- if (uiSink is null) return; // no-op if no client sink
- uiSink.ShowHudText(text ?? string.Empty);
+ sideGate.EnsureClient("UI.HudText");
+ uiSink?.ShowHudText(text ?? string.Empty);
  }
 }
