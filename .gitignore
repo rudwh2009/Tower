@@ -1,0 +1,97 @@
+## MonoGame and Visual Studio gitignore
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+
+# Visual Studio files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Generated files
+*.pidb
+*.userprefs
+*.csproj.user
+
+# Backup & temporary files
+*.bak
+*.tmp
+*.temp
+*.log
+*.old
+
+# NuGet packages
+*.nupkg
+*.snupkg
+# Uncomment if you don’t want to commit packages folder
+# packages/
+
+# Mono Auto Generated Files
+*.mdb
+*.pdb
+
+# Windows image cache files
+Thumbs.db
+ehthumbs.db
+
+# MonoGame Content Pipeline
+# (Generated XNB files shouldn’t be committed — commit .mgcb + source assets instead)
+*.xnb
+
+# Cache files
+*.db
+*.cache
+*.sqlite
+*.sdf
+
+# OS files
+.DS_Store
+Icon?
+Desktop.ini
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Publish output
+[Pp]ublish/
+*.Publish.xml
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+# Crash dumps
+*.stackdump
+*.dmp
+
+# GitHub Copilot
+.copilot/
+.github/copilot/
+.config/copilot/
+**/.copilot/
+**/.github/copilot/
+**/.config/copilot/
+
+# Copilot IDE caches / logs
+.vscode/copilot*
+.vscode/copilot-*
+.idea/copilot*
+*.copilot-temp
+*.copilot-snapshot
+
+# Visual Studio workspace and Copilot cache
+.vs/
+

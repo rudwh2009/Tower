@@ -1,0 +1,42 @@
+name: CI
+on:
+ push:
+ branches: [ main ]
+ pull_request:
+ branches: [ main ]
+jobs:
+ build-test:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: actions/setup-dotnet@v4
+ with:
+ dotnet-version: '9.0.x'
+ - name: Restore
+ run: dotnet restore Tower.sln
+ - name: Format Check
+ run: dotnet format --verify-no-changes || true
+ - name: Build
+ run: dotnet build Tower.sln -c Release --no-restore
+ - name: Test
+ run: dotnet test Tower.sln -c Release --no-build --collect:"XPlat Code Coverage"
+ - name: Upload coverage
+ if: always()
+ uses: actions/upload-artifact@v4
+ with:
+ name: coverage
+ path: '**/TestResults/**/*.xml'
+ lua-lint:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - name: Stylua
+ uses: JohnnyMorganz/StyLua@v1
+ with:
+ token: ${{ secrets.GITHUB_TOKEN }}
+ args: --check .
+ - name: Selene
+ uses: Kampfkarren/selene-action@v2
+ with:
+ version:0.26.1
+ token: ${{ secrets.GITHUB_TOKEN }}

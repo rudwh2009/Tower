@@ -1,0 +1,49 @@
+root = true
+
+[*.cs]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size =4
+max_line_length =120
+
+# C# settings
+csharp_new_line_before_open_brace = all
+csharp_preserve_single_line_blocks = true
+csharp_indent_case_contents = true
+csharp_using_directive_placement = outside_namespace:silent
+
+# Language
+dotnet_language_version =12.0
+
+# Nullable and usings
+dotnet_style_require_accessibility_modifiers = always:suggestion
+csharp_style_namespace_declarations = file_scoped:suggestion
+
+# Analyzer config
+severity = suggestion
+
+# Using ordering
+dotnet_sort_system_directives_first = true
+
+# StyleCop: relax documentation/file header in scaffold
+[*.cs]
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1615.severity = none
+
+[*.lua]
+indent_style = space
+indent_size =2
+end_of_line = lf
+insert_final_newline = true
+
+[*.{json,yml,yaml,md}]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size =2

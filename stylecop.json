@@ -1,0 +1,11 @@
+{
+ "settings": {
+ "documentationRules": {
+ "companyName": "CoopScaffold",
+ "fileHeaderTemplate": "Copyright (c) Tower.\nLicensed under the MIT License.",
+ "documentExposedElements": true,
+ "documentInternalElements": false,
+ "documentPrivateElements": false
+ }
+ }
+}
