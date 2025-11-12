@@ -1,1 +1,1 @@
-{ "assets": [ {"id":"texture/ui","path":"Sprites/ui.png"} ] }
+{ "assets": [ {"id":"texture/ui","path":"Sprites/ui.png"} ], "particles": [ { "id": "vfx/hit_spark", "path": "Vfx/hit_spark.particles.json" }, { "id": "vfx/muzzle", "path": "Vfx/muzzle_flash.particles.json" }, { "id": "vfx/death_pop", "path": "Vfx/enemy_death.particles.json" }, { "id": "vfx/level_up", "path": "Vfx/level_up.particles.json" } ], "sounds": [ { "id": "sound/hit", "path": "Audio/hit.wav" }, { "id": "sound/loop_ambient", "path": "Audio/ambient.ogg" } ] }

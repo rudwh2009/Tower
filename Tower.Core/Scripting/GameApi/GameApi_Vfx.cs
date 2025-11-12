@@ -7,17 +7,14 @@ namespace Tower.Core.Scripting.GameApi;
 public sealed partial class GameApi
 {
  private IVfxSink? vfxSink;
- public GameApiVfx Vfx { get; }
+ public GameApiVfx Vfx { get; private set; } = null!;
 
- public void SetVfxSink(IVfxSink sink)
- {
- vfxSink = sink;
- }
-
- public GameApi()
+ partial void OnConstructed()
  {
  Vfx = new GameApiVfx(() => vfxSink);
  }
+
+ public void SetVfxSink(IVfxSink sink) => vfxSink = sink;
 }
 
 public sealed class GameApiVfx
@@ -31,7 +28,7 @@ public sealed class GameApiVfx
  if (sink is null)
  {
  Log.Warning("VFX spawn called without client sink: {Id}", logicalId);
- return0;
+ return 0;
  }
  var h = sink.Spawn(logicalId, new Vector2((float)x, (float)y), (float)rot, (float)scale);
  return h.Id;

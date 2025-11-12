@@ -5,6 +5,8 @@ using Tower.Core.Engine.Timing;
 using Tower.Core.Modding;
 using Tower.Core.Scripting;
 using Tower.Core.Scripting.GameApi;
+using Tower.Core.Engine.UI;
+using Tower.Client.Audio;
 using Microsoft.Xna.Framework;
 using Serilog;
 
@@ -12,6 +14,7 @@ namespace Tower.Client;
 
 public sealed class GameClient : Game
 {
+ private sealed class UiSink : IUiSink { public void ShowHudText(string text) => Log.Information("HUD: {Text}", text); }
  private readonly GraphicsDeviceManager _gdm;
  private readonly SystemRegistry _systems = new();
  private readonly EventBus _bus = new();
@@ -21,6 +24,7 @@ public sealed class GameClient : Game
  private readonly GameApi _api;
  private readonly ModBootstrapper _mods;
  private readonly bool _smoke;
+ private readonly SoundManager _sound;
 
  public GameClient(bool smoke)
  {
@@ -28,8 +32,12 @@ public sealed class GameClient : Game
  _gdm = new GraphicsDeviceManager(this);
  _timers = new TimerService(_bus);
  _api = new GameApi(_assets, _bus, _systems, _timers);
+ _api.SetSideGate(new Tower.Core.Engine.Prefabs.SideGate(false)); // client
  _lua = new LuaRuntime(_api);
  _mods = new ModBootstrapper(_assets, _lua, _api);
+ _api.SetUiSink(new UiSink());
+ _sound = new SoundManager(_assets);
+ _api.SetSoundSink(_sound);
  IsMouseVisible = true;
  }
 
