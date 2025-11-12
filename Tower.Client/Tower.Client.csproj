@@ -15,9 +15,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Tower.Core\Tower.Core.csproj" />
 		<ProjectReference Include="..\Tower.Net\Tower.Net.csproj" />
+		<ProjectReference Include="..\Tower.Server\Tower.Server.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="..\Tower.Core\Content\**\*">
+		<Content Include="..\Content\**\*">
 			<Link>Content\%(RecursiveDir)%(Filename)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
