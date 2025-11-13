@@ -5,6 +5,7 @@ using MoonSharp.Interpreter;
 using Serilog;
 using Tower.Core.Engine.Prefabs;
 using Tower.Core.Engine.Entities;
+using Tower.Core.Engine.Entities;
 
 namespace Tower.Core.Scripting.GameApi;
 
@@ -13,6 +14,7 @@ namespace Tower.Core.Scripting.GameApi;
 /// </summary>
 public sealed partial class GameApi
 {
+ private readonly EntityIndex _entityIndex = new();
  /// <summary>Registers a prefab factory closure under the given id. Server-only.</summary>
  public void RegisterPrefab(string id, DynValue factory)
  {
@@ -38,6 +40,23 @@ public sealed partial class GameApi
  if (!prefabRegistry.TryGet(id, out var factory)) throw new ScriptRuntimeException($"unknown prefab: {id}");
  var proxy = spawner.Spawn(id, new SpawnContext(x, y, props), factory);
  hookBus.InvokePrefabPostInits(id, proxy, Log.Logger);
+ _entityIndex.Add(proxy);
  return proxy;
+ }
+
+ /// <summary>Find entities with a tag. Server-only.</summary>
+ public IReadOnlyList<IEntityProxy> FindWithTag(string tag)
+ {
+ sideGate.EnsureServer("Entity.FindWithTag");
+ if (string.IsNullOrWhiteSpace(tag)) throw new ScriptRuntimeException("tag required");
+ return _entityIndex.FindWithTag(tag);
+ }
+
+ /// <summary>Find entities within radius, optionally filtered by tag. Server-only.</summary>
+ public IReadOnlyList<IEntityProxy> FindInRadius(double x, double y, double radius, string? tag = null)
+ {
+ sideGate.EnsureServer("Entity.FindInRadius");
+ if (radius <0) throw new ScriptRuntimeException("radius must be non-negative");
+ return _entityIndex.FindInRadius(x, y, radius, tag);
  }
 }

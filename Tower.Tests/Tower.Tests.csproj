@@ -15,6 +15,7 @@
  <ItemGroup>
  <ProjectReference Include="..\Tower.Core\Tower.Core.csproj" />
  <ProjectReference Include="..\Tower.Net\Tower.Net.csproj" />
+ <ProjectReference Include="..\Tower.Client\Tower.Client.csproj" />
  </ItemGroup>
  <ItemGroup>
  <Content Include="..\Content\**\*">

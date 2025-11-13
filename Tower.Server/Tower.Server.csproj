@@ -14,4 +14,7 @@
 		<ProjectReference Include="..\Tower.Core\Tower.Core.csproj" />
 		<ProjectReference Include="..\Tower.Net\Tower.Net.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Http\" />
+	</ItemGroup>
 </Project>

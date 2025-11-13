@@ -1,4 +1,5 @@
 using Serilog;
+using Tower.Core.Scripting;
 
 namespace Tower.Core.Engine.Systems;
 
@@ -6,6 +7,9 @@ public sealed class SystemRegistry
 {
  private readonly SortedList<int, List<Action<double>>> _update = new();
  private readonly object _gate = new();
+ private Action? _onTickStart;
+
+ public void SetOnTickStart(Action onTickStart) => _onTickStart = onTickStart;
 
  public void Add(string name, int order, Action<double> update)
  {
@@ -29,6 +33,7 @@ public sealed class SystemRegistry
  {
  copy = _update.Values.SelectMany(x => x).ToList();
  }
+ _onTickStart?.Invoke();
  foreach (var u in copy)
  {
  try

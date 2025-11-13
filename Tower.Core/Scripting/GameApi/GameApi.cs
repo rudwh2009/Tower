@@ -7,6 +7,7 @@ using Tower.Core.Engine.Systems;
 using Tower.Core.Engine.Timing;
 using Tower.Core.Engine.Entities;
 using Tower.Core.Engine.Prefabs;
+using Serilog;
 
 namespace Tower.Core.Scripting.GameApi;
 
@@ -26,9 +27,15 @@ public sealed partial class GameApi
  private IEntitySpawner spawner = new EntitySpawner();
  private ISideGate sideGate = new SideGate(true); // default server-mode for singleplayer
  private string? currentModId;
+ private const int ApiMajor =1;
+ private const int ApiMinor =0;
 
  public void SetCurrentMod(string modId) => currentModId = modId;
  public string? GetCurrentMod() => currentModId;
+ public string GetApiVersion() => $"{ApiMajor}.{ApiMinor}";
+ public void LogInfo(string msg) => Log.Information("[{Mod}] {Msg}", currentModId ?? "?", msg);
+ public void LogWarn(string msg) => Log.Warning("[{Mod}] {Msg}", currentModId ?? "?", msg);
+ public void LogError(string msg) => Log.Error("[{Mod}] {Msg}", currentModId ?? "?", msg);
 
  /// <summary>Allows host to override the side gate (server/client).</summary>
  public void SetSideGate(ISideGate gate) => sideGate = gate ?? throw new ArgumentNullException(nameof(gate));

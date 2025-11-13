@@ -23,4 +23,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Tower.Net\Tower.Net.csproj" />
+	</ItemGroup>
 </Project>

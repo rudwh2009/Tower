@@ -7,7 +7,7 @@ namespace Tower.Core.Engine.Assets;
 public sealed class AssetService : IAssetService
 {
  private static readonly HashSet<string> AllowedExt = new(StringComparer.OrdinalIgnoreCase)
- { ".png", ".json", ".ogg", ".wav", ".ttf", ".mgfxo", ".particles.json", ".ember", ".mp3" };
+ { ".png", ".json", ".ogg", ".wav", ".ttf", ".particles.json", ".ember", ".mp3" };
  private const long MaxFileSizeBytes =64L *1024 *1024; //64MB cap
 
  private readonly Dictionary<string, Func<object?>> _loaders = new(StringComparer.Ordinal);
@@ -38,6 +38,7 @@ public sealed class AssetService : IAssetService
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
  if (!File.Exists(full)) { Log.Warning("Asset path not found: {Path}", full); continue; }
+ if (HasReparsePointInPath(rootDir, full)) { Log.Warning("Rejected reparse point in path: {Path}", full); continue; }
  if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Asset too large: {Path}", full); continue; }
  _loaders[$"{modId}/{id}"] = () => LoadAsset(full);
  }
@@ -55,6 +56,7 @@ public sealed class AssetService : IAssetService
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext) && !full.EndsWith(".particles.json", StringComparison.OrdinalIgnoreCase)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
  if (!File.Exists(full)) { Log.Warning("Particle path not found: {Path}", full); continue; }
+ if (HasReparsePointInPath(rootDir, full)) { Log.Warning("Rejected reparse point in path: {Path}", full); continue; }
  if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Particle too large: {Path}", full); continue; }
  var logicalId = $"{modId}/{id}";
  if (full.EndsWith(".ember", StringComparison.OrdinalIgnoreCase))
@@ -80,6 +82,7 @@ public sealed class AssetService : IAssetService
  var ext = Path.GetExtension(full);
  if (!AllowedExt.Contains(ext)) { Log.Warning("Extension not allowed: {Ext}", ext); continue; }
  if (!File.Exists(full)) { Log.Warning("Sound path not found: {Path}", full); continue; }
+ if (HasReparsePointInPath(rootDir, full)) { Log.Warning("Rejected reparse point in path: {Path}", full); continue; }
  if (new FileInfo(full).Length > MaxFileSizeBytes) { Log.Warning("Sound too large: {Path}", full); continue; }
  var logicalId = $"{modId}/{id}";
  _soundLoaders[logicalId] = () => new SoundHandle(full);
@@ -140,6 +143,25 @@ public sealed class AssetService : IAssetService
  if (Path.IsPathRooted(rel)) return false;
  if (rel.Contains("..")) return false;
  return true;
+ }
+
+ private static bool HasReparsePointInPath(string baseDir, string full)
+ {
+ try
+ {
+ var baseFull = Path.GetFullPath(baseDir);
+ var dirPath = Path.GetDirectoryName(full);
+ if (string.IsNullOrEmpty(dirPath)) return false;
+ var dir = new DirectoryInfo(dirPath);
+ // walk up toward base dir, rejecting any reparse point
+ while (dir != null && dir.FullName.StartsWith(baseFull, StringComparison.OrdinalIgnoreCase))
+ {
+ if ((dir.Attributes & FileAttributes.ReparsePoint) !=0) return true;
+ dir = dir.Parent;
+ }
+ return false;
+ }
+ catch { return true; }
  }
 
  private static object? LoadAsset(string full)

@@ -26,6 +26,24 @@ public sealed class ModScriptLoader : ScriptLoaderBase
  try { var _ = ResolvePath(name); return true; } catch { return false; }
  }
 
+ private static bool HasReparsePointInPath(string baseDir, string full)
+ {
+ try
+ {
+ var baseFull = Path.GetFullPath(baseDir);
+ var dirPath = Path.GetDirectoryName(full);
+ if (string.IsNullOrEmpty(dirPath)) return false;
+ var dir = new DirectoryInfo(dirPath);
+ while (dir != null && dir.FullName.StartsWith(baseFull, StringComparison.OrdinalIgnoreCase))
+ {
+ if ((dir.Attributes & FileAttributes.ReparsePoint) !=0) return true;
+ dir = dir.Parent;
+ }
+ return false;
+ }
+ catch { return true; }
+ }
+
  private string ResolvePath(string name)
  {
  if (_roots.Count ==0) throw new ScriptRuntimeException("script root not set");
@@ -36,7 +54,11 @@ public sealed class ModScriptLoader : ScriptLoaderBase
  {
  var combined = Path.Combine(root, rel);
  var full = Path.GetFullPath(combined);
- if (full.StartsWith(root, StringComparison.OrdinalIgnoreCase) && File.Exists(full)) return full;
+ if (full.StartsWith(root, StringComparison.OrdinalIgnoreCase) && File.Exists(full))
+ {
+ if (HasReparsePointInPath(root, full)) throw new ScriptRuntimeException("script path contains reparse point");
+ return full;
+ }
  }
  throw new ScriptRuntimeException($"script not found: {name}");
  }

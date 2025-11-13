@@ -1,3 +1,4 @@
+extern alias nvorbis;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Audio;
 using Tower.Core.Engine.Assets;
@@ -64,14 +65,49 @@ public sealed class AssetAdapter : IDisposable
  }
  }
 
+ private static SoundEffect DecodeOggToSoundEffect(string path)
+ {
+ using var vorbis = new nvorbis::NVorbis.VorbisReader(path);
+ int channels = vorbis.Channels;
+ int sampleRate = vorbis.SampleRate;
+ var ms = new MemoryStream();
+ var floatBuf = new float[4096 * channels];
+ var bytes = new byte[floatBuf.Length *2];
+ int read;
+ while ((read = vorbis.ReadSamples(floatBuf,0, floatBuf.Length)) >0)
+ {
+ int byteCount = read *2; //16-bit
+ for (int i =0; i < read; i++)
+ {
+ var f = Math.Clamp(floatBuf[i], -1f,1f);
+ short s = (short)(f * short.MaxValue);
+ bytes[i *2] = (byte)(s &0xFF);
+ bytes[i *2 +1] = (byte)((s >>8) &0xFF);
+ }
+ ms.Write(bytes,0, byteCount);
+ }
+ var pcm = ms.ToArray();
+ var chan = channels ==1 ? AudioChannels.Mono : AudioChannels.Stereo;
+ return new SoundEffect(pcm, sampleRate, chan);
+ }
+
  public SoundEffect GetSound(SoundHandle handle)
  {
  var key = handle.Path;
  if (_sounds.TryGetValue(key, out var s)) return s;
  try
  {
+ var ext = Path.GetExtension(handle.Path);
+ SoundEffect se;
+ if (ext.Equals(".ogg", StringComparison.OrdinalIgnoreCase))
+ {
+ se = DecodeOggToSoundEffect(handle.Path);
+ }
+ else
+ {
  using var fs = File.OpenRead(handle.Path);
- var se = SoundEffect.FromStream(fs);
+ se = SoundEffect.FromStream(fs);
+ }
  if (se.Duration.TotalSeconds > MaxSoundSeconds)
  {
  Log.Warning("Sound too long ({Sec:F1}s): {Path}", se.Duration.TotalSeconds, handle.Path);
